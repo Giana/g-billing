@@ -3,7 +3,7 @@ fx_version 'cerulean'
 game 'gta5'
 
 author 'Giana'
-description 'billing'
+description 'g-billing'
 
 shared_script 'config.lua'
 
