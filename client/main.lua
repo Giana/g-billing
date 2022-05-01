@@ -392,7 +392,7 @@ RegisterNetEvent('billing:client:openPaidBilledMenu', function(bills)
         local v = bills[i]
         billsMenu[#billsMenu + 1] = {
             header = '#' .. v.id .. ' - $' .. comma_value(v.amount) .. '',
-            txt = 'Date: ' .. v.bill_date .. '<br>Due to: "' .. v.sender_account .. '"<br>Recipient: ' .. v.recipient_name .. ' (' .. v.recipient_citizenid .. ')<br>Paid: '.. v.status_date .. '',
+            txt = 'Date: ' .. v.bill_date .. '<br>Due to: "' .. v.sender_account .. '"<br>Recipient: ' .. v.recipient_name .. ' (' .. v.recipient_citizenid .. ')<br>Paid: ' .. v.status_date .. '',
             params = {
                 event = 'billing:client:notifyOfPaidBill'
             }

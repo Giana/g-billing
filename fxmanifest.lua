@@ -8,19 +8,19 @@ description 'g-billing'
 shared_script 'config.lua'
 
 client_scripts {
-	'client/main.lua',
+    'client/main.lua',
 }
 
 server_scripts {
-	'@oxmysql/lib/MySQL.lua',
-	'server/main.lua',
+    '@oxmysql/lib/MySQL.lua',
+    'server/main.lua',
 }
 
 dependencies {
-	'qb-core',
-	'qb-input',
-	'qb-management',
-	'qb-menu'
+    'qb-core',
+    'qb-input',
+    'qb-management',
+    'qb-menu'
 }
 
 lua54 'yes'
