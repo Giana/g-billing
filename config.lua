@@ -8,7 +8,8 @@ Config.PermittedJobs = {
     'ambulance',
     'realestate',
     'taxi',
-    'cardealer'
+    'cardealer',
+    'police'
 }
 
 -- Commands --
