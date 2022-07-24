@@ -75,10 +75,6 @@ function getPaidBills(source)
     return result
 end
 
-function addMoney(account, amount)
-    MySQL.Async.execute('UPDATE management_funds SET amount = amount + ? WHERE job_name = ? and type = "boss"', { amount, account })
-end
-
 -- Events --
 
 RegisterNetEvent('billing:server:RequestCommands')
@@ -183,7 +179,7 @@ AddEventHandler('billing:server:payBill', function(data)
 
     if player.Functions.GetMoney('bank') >= bill.amount then
         player.Functions.RemoveMoney('bank', bill.amount, 'Bill pay')
-        addMoney(bill.sender_account, bill.amount)
+        exports['qb-management']:AddMoney(bill.sender_account, bill.amount)
         local sender = QBCore.Functions.GetPlayerByCitizenId(bill.sender_citizenid)
         local datetime = os.date('%Y-%m-%d %H:%M:%S')
 
