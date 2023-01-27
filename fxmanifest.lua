@@ -2,7 +2,7 @@ fx_version 'cerulean'
 
 game 'gta5'
 
-author 'Giana'
+author 'Giana - github.com/Giana'
 description 'g-billing'
 
 shared_script 'config.lua'
