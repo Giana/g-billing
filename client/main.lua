@@ -4,14 +4,12 @@ QBCore = exports['qb-core']:GetCoreObject()
 
 local function comma_value(amount)
     local formatted = amount
-
     while true do
         formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
         if k == 0 then
             break
         end
     end
-
     return formatted
 end
 
@@ -41,7 +39,6 @@ local function engageConfirmBillMenu(billAmount, recipient)
             }
         },
     }
-
     exports['qb-menu']:openMenu(menu)
 end
 
@@ -72,7 +69,6 @@ local function engageSendBillMenu()
             }
         },
     }
-
     exports['qb-menu']:openMenu(menu)
 end
 
@@ -132,17 +128,14 @@ RegisterNetEvent('billing:client:createBill', function()
     })
     recipientID = input.id
     billAmount = input.amount
-
     if not recipientID then
         QBCore.Functions.Notify(Lang:t('error.getting_id'), 'error')
         return
     end
-
     if not billAmount then
         QBCore.Functions.Notify(Lang:t('error.getting_amount'), 'error')
         return
     end
-
     QBCore.Functions.TriggerCallback('billing:server:getPlayerFromId', function(validRecipient)
         if validRecipient then
             engageConfirmBillMenu(billAmount, validRecipient)
@@ -183,7 +176,6 @@ RegisterNetEvent('billing:client:engageChooseBillViewMenu', function()
             }
         },
     }
-
     exports['qb-menu']:openMenu(menu)
 end)
 
@@ -220,7 +212,6 @@ RegisterNetEvent('billing:client:engageChooseSentBillsViewMenu', function()
             }
         },
     }
-
     exports['qb-menu']:openMenu(menu)
 end)
 
@@ -257,7 +248,6 @@ RegisterNetEvent('billing:client:engageChooseYourBillsViewMenu', function()
             }
         },
     }
-
     exports['qb-menu']:openMenu(menu)
 end)
 
@@ -267,7 +257,7 @@ RegisterNetEvent('billing:client:openConfirmPayBillMenu', function(data)
         {
             header = Lang:t('menu.confirm_pay'),
             isMenuHeader = true,
-            txt =  Lang:t('menu.confirm_bill_info', { billId = bill.id, date = bill.bill_date, senderName = bill.sender_name, account = bill.sender_account })
+            txt = Lang:t('menu.confirm_bill_info', { billId = bill.id, date = bill.bill_date, senderName = bill.sender_name, account = bill.sender_account })
         },
         {
             header = Lang:t('menu.no_back'),
@@ -287,7 +277,6 @@ RegisterNetEvent('billing:client:openConfirmPayBillMenu', function(data)
             }
         }
     }
-
     exports['qb-menu']:openMenu(billsMenu)
 end)
 
@@ -317,21 +306,17 @@ RegisterNetEvent('billing:client:openConfirmCancelBillMenu', function(data)
             }
         }
     }
-
     exports['qb-menu']:openMenu(billsMenu)
 end)
 
 RegisterNetEvent('billing:client:openPendingBilledMenu', function(bills)
     local ordered_keys = {}
     local totalDue = 0
-
     for k, v in pairs(bills) do
         table.insert(ordered_keys, k)
         totalDue = totalDue + v.amount
     end
-
     table.sort(ordered_keys)
-
     local billsMenu = {
         {
             header = Lang:t('menu.bills_owed'),
@@ -339,7 +324,6 @@ RegisterNetEvent('billing:client:openPendingBilledMenu', function(bills)
             txt = Lang:t('menu.total_due', { amount = comma_value(totalDue) })
         }
     }
-
     for i = #ordered_keys, 1, -1 do
         local v = bills[i]
         billsMenu[#billsMenu + 1] = {
@@ -365,21 +349,17 @@ RegisterNetEvent('billing:client:openPendingBilledMenu', function(bills)
             event = 'qb-menu:client:closeMenu'
         }
     }
-
     exports['qb-menu']:openMenu(billsMenu)
 end)
 
 RegisterNetEvent('billing:client:openPaidBilledMenu', function(bills)
     local ordered_keys = {}
     local totalPaid = 0
-
     for k, v in pairs(bills) do
         table.insert(ordered_keys, k)
         totalPaid = totalPaid + v.amount
     end
-
     table.sort(ordered_keys)
-
     local billsMenu = {
         {
             header = Lang:t('menu.bills_paid'),
@@ -387,7 +367,6 @@ RegisterNetEvent('billing:client:openPaidBilledMenu', function(bills)
             txt = Lang:t('menu.total_paid', { amount = comma_value(totalPaid) })
         }
     }
-
     for i = #ordered_keys, 1, -1 do
         local v = bills[i]
         billsMenu[#billsMenu + 1] = {
@@ -410,21 +389,17 @@ RegisterNetEvent('billing:client:openPaidBilledMenu', function(bills)
             event = 'qb-menu:client:closeMenu'
         }
     }
-
     exports['qb-menu']:openMenu(billsMenu)
 end)
 
 RegisterNetEvent('billing:client:openBillsToPayMenu', function(bills)
     local ordered_keys = {}
     local totalDue = 0
-
     for k, v in pairs(bills) do
         table.insert(ordered_keys, k)
         totalDue = totalDue + v.amount
     end
-
     table.sort(ordered_keys)
-
     local billsMenu = {
         {
             header = Lang:t('menu.owed_bills'),
@@ -432,7 +407,6 @@ RegisterNetEvent('billing:client:openBillsToPayMenu', function(bills)
             txt = Lang:t('menu.total_due', { amount = comma_value(totalDue) })
         }
     }
-
     for i = #ordered_keys, 1, -1 do
         local v = bills[i]
         billsMenu[#billsMenu + 1] = {
@@ -458,21 +432,17 @@ RegisterNetEvent('billing:client:openBillsToPayMenu', function(bills)
             event = 'qb-menu:client:closeMenu'
         }
     }
-
     exports['qb-menu']:openMenu(billsMenu)
 end)
 
 RegisterNetEvent('billing:client:openPaidBillsMenu', function(bills)
     local ordered_keys = {}
     local totalPaid = 0
-
     for k, v in pairs(bills) do
         table.insert(ordered_keys, k)
         totalPaid = totalPaid + v.amount
     end
-
     table.sort(ordered_keys)
-
     local billsMenu = {
         {
             header = Lang:t('menu.paid_bills'),
@@ -480,7 +450,6 @@ RegisterNetEvent('billing:client:openPaidBillsMenu', function(bills)
             txt = Lang:t('menu.total_paid', { amount = comma_value(totalPaid) })
         }
     }
-
     for i = #ordered_keys, 1, -1 do
         local v = bills[i]
         billsMenu[#billsMenu + 1] = {
@@ -503,6 +472,5 @@ RegisterNetEvent('billing:client:openPaidBillsMenu', function(bills)
             event = 'qb-menu:client:closeMenu'
         }
     }
-
     exports['qb-menu']:openMenu(billsMenu)
 end)
