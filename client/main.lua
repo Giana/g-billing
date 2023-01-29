@@ -255,7 +255,7 @@ RegisterNetEvent('billing:client:openConfirmPayBillMenu', function(data)
     local bill = data.bill
     local billsMenu = {
         {
-            header = Lang:t('menu.confirm_pay'),
+            header = Lang:t('menu.confirm_pay', { amount = comma_value(bill.amount) }),
             isMenuHeader = true,
             txt = Lang:t('menu.confirm_bill_info', { billId = bill.id, date = bill.bill_date, senderName = bill.sender_name, account = bill.sender_account })
         },
@@ -321,7 +321,7 @@ RegisterNetEvent('billing:client:openPendingBilledMenu', function(bills)
         {
             header = Lang:t('menu.bills_owed'),
             isMenuHeader = true,
-            txt = Lang:t('menu.total_due', { amount = comma_value(totalDue) })
+            txt = Lang:t('menu.total_owed', { amount = comma_value(totalDue) })
         }
     }
     for i = #ordered_keys, 1, -1 do
