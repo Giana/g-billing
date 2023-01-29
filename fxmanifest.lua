@@ -5,15 +5,19 @@ game 'gta5'
 author 'Giana - github.com/Giana'
 description 'g-billing'
 
-shared_script 'config.lua'
+shared_scripts {
+    '@qb-core/shared/locale.lua',
+    'locales/en.lua',
+    'config.lua'
+}
 
 client_scripts {
-    'client/main.lua',
+    'client/main.lua'
 }
 
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
-    'server/main.lua',
+    'server/main.lua'
 }
 
 dependencies {

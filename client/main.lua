@@ -19,18 +19,18 @@ local function engageConfirmBillMenu(billAmount, recipient)
     local recCharInfo = recipient.PlayerData.charinfo
     local menu = {
         {
-            header = 'Are you sure you want to send this bill?',
+            header = Lang:t('menu.confirm_send'),
             isMenuHeader = true,
-            txt = 'Amount: $' .. comma_value(billAmount) .. ' billed to ' .. recCharInfo.firstname .. ' ' .. recCharInfo.lastname .. ''
+            txt = Lang:t('menu.amount_billed_to', { amount = billAmount, firstName = recCharInfo.firstname, lastName = recCharInfo.lastname })
         },
         {
-            header = 'No, I changed my mind!',
+            header = Lang:t('menu.no_changed_mind'),
             params = {
                 event = exports['qb-menu']:closeMenu()
             }
         },
         {
-            header = 'Yes, send this bill on behalf of the "' .. QBCore.Functions.GetPlayerData().job.name .. '" account.',
+            header = Lang:t('menu.send_bill_for_account', { account = QBCore.Functions.GetPlayerData().job.name }),
             params = {
                 isServer = true,
                 event = 'billing:server:sendBill',
@@ -49,24 +49,24 @@ local function engageSendBillMenu()
     local senderData = QBCore.Functions.GetPlayerData()
     local menu = {
         {
-            header = 'Do you want to send a bill?',
+            header = Lang:t('menu.ask_send'),
             isMenuHeader = true,
-            txt = 'Account: "' .. senderData.job.name .. '"'
+            txt = Lang:t('menu.account_name', { account = senderData.job.name })
         },
         {
-            header = '• Send a Bill',
+            header = Lang:t('menu.send_bill_bullet'),
             params = {
                 event = 'billing:client:createBill'
             }
         },
         {
-            header = '← Return',
+            header = Lang:t('menu.return_bullet'),
             params = {
                 event = 'billing:client:engageChooseBillViewMenu'
             }
         },
         {
-            header = '✖ Cancel',
+            header = Lang:t('menu.cancel_bullet'),
             params = {
                 event = exports['qb-menu']:closeMenu()
             }
@@ -99,13 +99,13 @@ RegisterNetEvent('billing:client:canSendBill', function()
         if canSendBill then
             engageSendBillMenu()
         else
-            QBCore.Functions.Notify('You must be on duty and authorized to bill for your occupation!', 'error')
+            QBCore.Functions.Notify(Lang:t('error.must_be_on_duty'), 'error')
         end
     end)
 end)
 
 RegisterNetEvent('billing:client:notifyOfPaidBill', function()
-    QBCore.Functions.Notify('This bill is already paid!', 'error')
+    QBCore.Functions.Notify(Lang:t('error.already_paid'), 'error')
 end)
 
 RegisterNetEvent('billing:client:createBill', function()
@@ -113,19 +113,19 @@ RegisterNetEvent('billing:client:createBill', function()
     local billAmount = nil
 
     local input = exports['qb-input']:ShowInput({
-        header = "New Bill",
-        submitText = "Confirm",
+        header = Lang:t('menu.new_bill'),
+        submitText = Lang:t('menu.confirm'),
         inputs = {
             {
-                text = "Recipient Server ID (#)",
-                name = "id",
-                type = "number",
+                text = Lang:t('menu.recipient_id'),
+                name = 'id',
+                type = 'number',
                 isRequired = true
             },
             {
-                text = "Amount ($)",
-                name = "amount",
-                type = "number",
+                text = Lang:t('menu.amount'),
+                name = 'amount',
+                type = 'number',
                 isRequired = true
             }
         },
@@ -134,12 +134,12 @@ RegisterNetEvent('billing:client:createBill', function()
     billAmount = input.amount
 
     if not recipientID then
-        QBCore.Functions.Notify('Error getting recipient ID', 'error')
+        QBCore.Functions.Notify(Lang:t('error.getting_id'), 'error')
         return
     end
 
     if not billAmount then
-        QBCore.Functions.Notify('Error getting bill amount', 'error')
+        QBCore.Functions.Notify(Lang:t('error.getting_amount'), 'error')
         return
     end
 
@@ -147,7 +147,7 @@ RegisterNetEvent('billing:client:createBill', function()
         if validRecipient then
             engageConfirmBillMenu(billAmount, validRecipient)
         else
-            QBCore.Functions.Notify('Error getting player from given ID', 'error')
+            QBCore.Functions.Notify(Lang:t('error.getting_player'), 'error')
         end
     end, recipientID)
 end)
@@ -155,29 +155,29 @@ end)
 RegisterNetEvent('billing:client:engageChooseBillViewMenu', function()
     local menu = {
         {
-            header = 'Options',
+            header = Lang:t('menu.options'),
             isMenuHeader = true
         },
         {
-            header = '• View Your Bills',
+            header = Lang:t('menu.view_your_bills_bullet'),
             params = {
                 event = 'billing:client:engageChooseYourBillsViewMenu'
             }
         },
         {
-            header = '• View Sent Bills',
+            header = Lang:t('menu.view_sent_bills_bullet'),
             params = {
                 event = 'billing:client:engageChooseSentBillsViewMenu'
             }
         },
         {
-            header = '• Send New Bill',
+            header = Lang:t('menu.send_bill_bullet'),
             params = {
                 event = 'billing:client:canSendBill'
             }
         },
         {
-            header = '✖ Cancel',
+            header = Lang:t('menu.cancel_bullet'),
             params = {
                 event = exports['qb-menu']:closeMenu()
             }
@@ -190,31 +190,31 @@ end)
 RegisterNetEvent('billing:client:engageChooseSentBillsViewMenu', function()
     local menu = {
         {
-            header = 'Sent Bills',
+            header = Lang:t('menu.sent_bills'),
             isMenuHeader = true
         },
         {
-            header = '• View Pending',
+            header = Lang:t('menu.view_pending_bullet'),
             params = {
                 isServer = true,
                 event = 'billing:server:getPendingBilled'
             }
         },
         {
-            header = '• View Paid',
+            header = Lang:t('menu.view_paid_bullet'),
             params = {
                 isServer = true,
                 event = 'billing:server:getPaidBilled'
             }
         },
         {
-            header = '← Return',
+            header = Lang:t('menu.return_bullet'),
             params = {
                 event = 'billing:client:engageChooseBillViewMenu'
             }
         },
         {
-            header = '✖ Cancel',
+            header = Lang:t('menu.cancel_bullet'),
             params = {
                 event = exports['qb-menu']:closeMenu()
             }
@@ -227,31 +227,31 @@ end)
 RegisterNetEvent('billing:client:engageChooseYourBillsViewMenu', function()
     local menu = {
         {
-            header = 'Your Bills',
+            header = Lang:t('menu.your_bills'),
             isMenuHeader = true
         },
         {
-            header = '• View Current Due',
+            header = Lang:t('menu.view_current_due_bullet'),
             params = {
                 isServer = true,
                 event = 'billing:server:getBillsToPay'
             }
         },
         {
-            header = '• View Past Paid',
+            header = Lang:t('menu.view_past_paid_bullet'),
             params = {
                 isServer = true,
                 event = 'billing:server:getPaidBills'
             }
         },
         {
-            header = '← Return',
+            header = Lang:t('menu.return_bullet'),
             params = {
                 event = 'billing:client:engageChooseBillViewMenu'
             }
         },
         {
-            header = '✖ Cancel',
+            header = Lang:t('menu.cancel_bullet'),
             params = {
                 event = exports['qb-menu']:closeMenu()
             }
@@ -265,19 +265,19 @@ RegisterNetEvent('billing:client:openConfirmPayBillMenu', function(data)
     local bill = data.bill
     local billsMenu = {
         {
-            header = 'Are you sure you want to pay this bill for $' .. comma_value(bill.amount) .. '?',
+            header = Lang:t('menu.confirm_pay'),
             isMenuHeader = true,
-            txt = 'Bill #' .. bill.id .. '<br>Date: ' .. bill.bill_date .. '<br>Due to: ' .. bill.sender_name .. ' "' .. bill.sender_account .. '"'
+            txt =  Lang:t('menu.confirm_bill_info', { billId = bill.id, date = bill.bill_date, senderName = bill.sender_name, account = bill.sender_account })
         },
         {
-            header = 'No, take me back!',
+            header = Lang:t('menu.no_back'),
             params = {
                 isServer = true,
                 event = 'billing:server:getBillsToPay'
             }
         },
         {
-            header = 'Yes, I want to pay it!',
+            header = Lang:t('menu.yes_pay'),
             params = {
                 isServer = true,
                 event = 'billing:server:payBill',
@@ -295,19 +295,19 @@ RegisterNetEvent('billing:client:openConfirmCancelBillMenu', function(data)
     local bill = data.bill
     local billsMenu = {
         {
-            header = 'Are you sure you want to cancel this bill for $' .. comma_value(bill.amount) .. '?',
+            header = Lang:t('menu.confirm_cancel', { amount = comma_value(bill.amount) }),
             isMenuHeader = true,
-            txt = 'Date: ' .. bill.bill_date .. '<br>Due to: "' .. bill.sender_account .. '"<br>Recipient: ' .. bill.recipient_name .. ' (' .. bill.recipient_citizenid .. ')'
+            txt = Lang:t('menu.cancel_bill_info', { date = bill.bill_date, account = bill.sender_account, recipientName = bill.recipient_name, recipientCid = bill.recipient_citizenid })
         },
         {
-            header = 'No, take me back!',
+            header = Lang:t('menu.no_back'),
             params = {
                 isServer = true,
                 event = 'billing:server:getPendingBilled'
             }
         },
         {
-            header = 'Yes, cancel this bill!',
+            header = Lang:t('menu.yes_cancel'),
             params = {
                 isServer = true,
                 event = 'billing:server:deleteBill',
@@ -334,17 +334,17 @@ RegisterNetEvent('billing:client:openPendingBilledMenu', function(bills)
 
     local billsMenu = {
         {
-            header = 'Bills Owed',
+            header = Lang:t('menu.bills_owed'),
             isMenuHeader = true,
-            txt = 'Total Due: $' .. comma_value(totalDue) .. ''
+            txt = Lang:t('menu.total_due', { amount = comma_value(totalDue) })
         }
     }
 
     for i = #ordered_keys, 1, -1 do
         local v = bills[i]
         billsMenu[#billsMenu + 1] = {
-            header = '#' .. v.id .. ' - $' .. comma_value(v.amount) .. '',
-            txt = 'Date: ' .. v.bill_date .. '<br>Due to: "' .. v.sender_account .. '"<br>Recipient: ' .. v.recipient_name .. ' (' .. v.recipient_citizenid .. ')',
+            header = Lang:t('menu.id_amount', { id = v.id, amount = comma_value(v.amount) }),
+            txt = Lang:t('menu.cancel_bill_info', { date = v.bill_date, account = v.sender_account, recipientName = v.recipient_name, recipientCid = v.recipient_citizenid }),
             params = {
                 event = 'billing:client:openConfirmCancelBillMenu',
                 args = {
@@ -354,13 +354,13 @@ RegisterNetEvent('billing:client:openPendingBilledMenu', function(bills)
         }
     end
     billsMenu[#billsMenu + 1] = {
-        header = '← Return',
+        header = Lang:t('menu.return_bullet'),
         params = {
             event = 'billing:client:engageChooseSentBillsViewMenu'
         }
     }
     billsMenu[#billsMenu + 1] = {
-        header = '✖ Cancel',
+        header = Lang:t('menu.cancel_bullet'),
         params = {
             event = 'qb-menu:client:closeMenu'
         }
@@ -382,30 +382,30 @@ RegisterNetEvent('billing:client:openPaidBilledMenu', function(bills)
 
     local billsMenu = {
         {
-            header = 'Bills Paid',
+            header = Lang:t('menu.bills_paid'),
             isMenuHeader = true,
-            txt = 'Total Paid: $' .. comma_value(totalPaid) .. ''
+            txt = Lang:t('menu.total_paid', { amount = comma_value(totalPaid) })
         }
     }
 
     for i = #ordered_keys, 1, -1 do
         local v = bills[i]
         billsMenu[#billsMenu + 1] = {
-            header = '#' .. v.id .. ' - $' .. comma_value(v.amount) .. '',
-            txt = 'Date: ' .. v.bill_date .. '<br>Due to: "' .. v.sender_account .. '"<br>Recipient: ' .. v.recipient_name .. ' (' .. v.recipient_citizenid .. ')<br>Paid: ' .. v.status_date .. '',
+            header = Lang:t('menu.id_amount', { id = v.id, amount = comma_value(v.amount) }),
+            txt = Lang:t('menu.paid_billed_info', { date = v.bill_date, account = v.sender_account, recipientName = v.recipient_name, recipientCid = v.recipient_citizenid, datePaid = v.status_date }),
             params = {
                 event = 'billing:client:notifyOfPaidBill'
             }
         }
     end
     billsMenu[#billsMenu + 1] = {
-        header = '← Return',
+        header = Lang:t('menu.return_bullet'),
         params = {
             event = 'billing:client:engageChooseSentBillsViewMenu'
         }
     }
     billsMenu[#billsMenu + 1] = {
-        header = '✖ Cancel',
+        header = Lang:t('menu.cancel_bullet'),
         params = {
             event = 'qb-menu:client:closeMenu'
         }
@@ -427,17 +427,17 @@ RegisterNetEvent('billing:client:openBillsToPayMenu', function(bills)
 
     local billsMenu = {
         {
-            header = 'Owed Bills',
+            header = Lang:t('menu.owed_bills'),
             isMenuHeader = true,
-            txt = 'Total Due: $' .. comma_value(totalDue) .. ''
+            txt = Lang:t('menu.total_due', { amount = comma_value(totalDue) })
         }
     }
 
     for i = #ordered_keys, 1, -1 do
         local v = bills[i]
         billsMenu[#billsMenu + 1] = {
-            header = '#' .. v.id .. ' - $' .. comma_value(v.amount) .. '',
-            txt = 'Date: ' .. v.bill_date .. '<br>Due to: ' .. v.sender_name .. ' "' .. v.sender_account .. '"',
+            header = Lang:t('menu.id_amount', { id = v.id, amount = comma_value(v.amount) }),
+            txt = Lang:t('menu.unpaid_bill_info', { date = v.bill_date, senderName = v.sender_name, account = v.sender_account }),
             params = {
                 event = 'billing:client:openConfirmPayBillMenu',
                 args = {
@@ -447,13 +447,13 @@ RegisterNetEvent('billing:client:openBillsToPayMenu', function(bills)
         }
     end
     billsMenu[#billsMenu + 1] = {
-        header = '← Return',
+        header = Lang:t('menu.return_bullet'),
         params = {
             event = 'billing:client:engageChooseYourBillsViewMenu'
         }
     }
     billsMenu[#billsMenu + 1] = {
-        header = '✖ Cancel',
+        header = Lang:t('menu.cancel_bullet'),
         params = {
             event = 'qb-menu:client:closeMenu'
         }
@@ -475,30 +475,30 @@ RegisterNetEvent('billing:client:openPaidBillsMenu', function(bills)
 
     local billsMenu = {
         {
-            header = 'Paid Bills',
+            header = Lang:t('menu.paid_bills'),
             isMenuHeader = true,
-            txt = 'Total Paid: $' .. comma_value(totalPaid) .. ''
+            txt = Lang:t('menu.total_paid', { amount = comma_value(totalPaid) })
         }
     }
 
     for i = #ordered_keys, 1, -1 do
         local v = bills[i]
         billsMenu[#billsMenu + 1] = {
-            header = '#' .. v.id .. ' - $' .. comma_value(v.amount) .. '',
-            txt = 'Date: ' .. v.bill_date .. '<br>Due to: ' .. v.sender_name .. ' "' .. v.sender_account .. '"<br>Paid: ' .. v.status_date .. '',
+            header = Lang:t('menu.id_amount', { id = v.id, amount = comma_value(v.amount) }),
+            txt = Lang:t('menu.paid_bills_info', { date = v.bill_date, senderName = v.sender_name, account = v.sender_account, datePaid = v.status_date }),
             params = {
                 event = 'billing:client:notifyOfPaidBill'
             }
         }
     end
     billsMenu[#billsMenu + 1] = {
-        header = '← Return',
+        header = Lang:t('menu.return_bullet'),
         params = {
             event = 'billing:client:engageChooseYourBillsViewMenu'
         }
     }
     billsMenu[#billsMenu + 1] = {
-        header = '✖ Cancel',
+        header = Lang:t('menu.cancel_bullet'),
         params = {
             event = 'qb-menu:client:closeMenu'
         }
