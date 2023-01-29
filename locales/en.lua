@@ -11,14 +11,14 @@ local Translations = {
         not_enough_money = 'Not enough money in your bank account!'
     },
     success = {
-        bill_sent = 'Bill sent\nAmount: $%{amount}\nTo: %{recipient}',
-        bill_paid_recipient = 'Bill paid\n#%{billId}\nAmount: $%{amount}\nPaid to: %{senderName} "%{account}"',
+        bill_sent = 'Bill sent - Amount: $%{amount} - To: %{recipient}',
+        bill_paid_recipient = 'Bill paid - #%{billId} - Amount: $%{amount} - Paid to: %{senderName} "%{account}"',
         bill_canceled_sender = 'Bill canceled'
     },
     info = {
-        bill_received = 'Bill received\nAmount: $%{amount}\nFrom: %{sender} "%{account}"',
-        bill_paid_sender = 'Bill paid\n#%{billId}\nAmount: $%{amount}\nPaid by: %{recipient}',
-        bill_canceled_recipient = 'Bill canceled\n#%{billId}\nAmount: $%{amount}\nDue to: %{senderName} "%{account}"'
+        bill_received = 'Bill received - Amount: $%{amount} - From: %{sender} "%{account}"',
+        bill_paid_sender = 'Bill paid - #%{billId} - Amount: $%{amount} - Paid by: %{recipient}',
+        bill_canceled_recipient = 'Bill canceled - #%{billId} - Amount: $%{amount} - Due to: %{senderName} "%{account}"'
     },
     menu = {
         confirm_send = 'Are you sure you want to send this bill?',
