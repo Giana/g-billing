@@ -63,9 +63,6 @@ local Translations = {
         paid_bills = 'Paid Bills',
         paid_bills_info = 'Date: %{date}<br>Due to: %{senderName} "%{account}"<br>Paid: %{datePaid}'
     },
-    button = {
-
-    },
     other = {
         bill_pay_desc = 'Bill pay'
     }
