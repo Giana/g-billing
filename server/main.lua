@@ -68,17 +68,17 @@ end
 
 -- Events --
 
-RegisterNetEvent('billing:server:RequestCommands')
-AddEventHandler('billing:server:RequestCommands', function()
+RegisterNetEvent('g-billing:server:RequestCommands')
+AddEventHandler('g-billing:server:RequestCommands', function()
     local src = source
     local player = QBCore.Functions.GetPlayer(src)
     if isAllowedToBill(player) then
-        TriggerClientEvent('billing:client:RequestCommands', src, true)
+        TriggerClientEvent('g-billing:client:RequestCommands', src, true)
     end
 end)
 
-RegisterNetEvent('billing:server:sendBill')
-AddEventHandler('billing:server:sendBill', function(data)
+RegisterNetEvent('g-billing:server:sendBill')
+AddEventHandler('g-billing:server:sendBill', function(data)
     local src = source
     local sender = QBCore.Functions.GetPlayer(src)
     local billAmount = data.billAmount
@@ -112,52 +112,52 @@ AddEventHandler('billing:server:sendBill', function(data)
     end
 end)
 
-RegisterNetEvent('billing:server:getPendingBilled')
-AddEventHandler('billing:server:getPendingBilled', function()
+RegisterNetEvent('g-billing:server:getPendingBilled')
+AddEventHandler('g-billing:server:getPendingBilled', function()
     local src = source
     local bills = getPendingBilled(src)
     if bills and bills[1] then
-        TriggerClientEvent('billing:client:openPendingBilledMenu', src, bills)
+        TriggerClientEvent('g-billing:client:openPendingBilledMenu', src, bills)
     else
         TriggerClientEvent('QBCore:Notify', src, Lang:t('error.retrieving_bills'), 'error')
     end
 end)
 
-RegisterNetEvent('billing:server:getPaidBilled')
-AddEventHandler('billing:server:getPaidBilled', function()
+RegisterNetEvent('g-billing:server:getPaidBilled')
+AddEventHandler('g-billing:server:getPaidBilled', function()
     local src = source
     local bills = getPaidBilled(src)
     if bills and bills[1] then
-        TriggerClientEvent('billing:client:openPaidBilledMenu', src, bills)
+        TriggerClientEvent('g-billing:client:openPaidBilledMenu', src, bills)
     else
         TriggerClientEvent('QBCore:Notify', src, Lang:t('error.retrieving_bills'), 'error')
     end
 end)
 
-RegisterNetEvent('billing:server:getBillsToPay')
-AddEventHandler('billing:server:getBillsToPay', function()
+RegisterNetEvent('g-billing:server:getBillsToPay')
+AddEventHandler('g-billing:server:getBillsToPay', function()
     local src = source
     local bills = getBillsToPay(src)
     if bills and bills[1] then
-        TriggerClientEvent('billing:client:openBillsToPayMenu', src, bills)
+        TriggerClientEvent('g-billing:client:openBillsToPayMenu', src, bills)
     else
         TriggerClientEvent('QBCore:Notify', src, Lang:t('error.retrieving_bills'), 'error')
     end
 end)
 
-RegisterNetEvent('billing:server:getPaidBills')
-AddEventHandler('billing:server:getPaidBills', function()
+RegisterNetEvent('g-billing:server:getPaidBills')
+AddEventHandler('g-billing:server:getPaidBills', function()
     local src = source
     local bills = getPaidBills(src)
     if bills and bills[1] then
-        TriggerClientEvent('billing:client:openPaidBillsMenu', src, bills)
+        TriggerClientEvent('g-billing:client:openPaidBillsMenu', src, bills)
     else
         TriggerClientEvent('QBCore:Notify', src, Lang:t('error.retrieving_bills'), 'error')
     end
 end)
 
-RegisterNetEvent('billing:server:payBill')
-AddEventHandler('billing:server:payBill', function(data)
+RegisterNetEvent('g-billing:server:payBill')
+AddEventHandler('g-billing:server:payBill', function(data)
     local src = source
     local player = QBCore.Functions.GetPlayer(src)
     local bill = data.bill
@@ -185,8 +185,8 @@ AddEventHandler('billing:server:payBill', function(data)
     end
 end)
 
-RegisterNetEvent('billing:server:deleteBill')
-AddEventHandler('billing:server:deleteBill', function(data)
+RegisterNetEvent('g-billing:server:deleteBill')
+AddEventHandler('g-billing:server:deleteBill', function(data)
     local src = source
     local bill = data.bill
     local recipient = QBCore.Functions.GetPlayerByCitizenId(bill.recipient_citizenid)
@@ -206,7 +206,7 @@ end)
 
 -- Callbacks --
 
-QBCore.Functions.CreateCallback('billing:server:canSendBill', function(source, cb)
+QBCore.Functions.CreateCallback('g-billing:server:canSendBill', function(source, cb)
     local src = source
     local player = QBCore.Functions.GetPlayer(src)
     if isAllowedToBill(player) then
@@ -215,7 +215,7 @@ QBCore.Functions.CreateCallback('billing:server:canSendBill', function(source, c
     cb(false)
 end)
 
-QBCore.Functions.CreateCallback('billing:server:hasBillsToPay', function(source, cb)
+QBCore.Functions.CreateCallback('g-billing:server:hasBillsToPay', function(source, cb)
     local src = source
     local result = getBillsToPay(src)
     if result and result[1] then
@@ -225,7 +225,7 @@ QBCore.Functions.CreateCallback('billing:server:hasBillsToPay', function(source,
     end
 end)
 
-QBCore.Functions.CreateCallback('billing:server:getPlayerFromId', function(source, cb, playerId)
+QBCore.Functions.CreateCallback('g-billing:server:getPlayerFromId', function(source, cb, playerId)
     local player = QBCore.Functions.GetPlayer(tonumber(playerId))
     cb(player)
 end)
