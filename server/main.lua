@@ -29,7 +29,7 @@ end
 function getPendingBilled(source)
     local src = source
     local player = QBCore.Functions.GetPlayer(src)
-    local result = MySQL.Sync.fetchAll('SELECT * FROM bills WHERE sender_citizenid = ? AND status = ?', {
+    local result = MySQL.query.await('SELECT * FROM bills WHERE sender_citizenid = ? AND status = ?', {
         player.PlayerData.citizenid,
         'Unpaid'
     })
@@ -39,7 +39,7 @@ end
 function getPaidBilled(source)
     local src = source
     local player = QBCore.Functions.GetPlayer(src)
-    local result = MySQL.Sync.fetchAll('SELECT * FROM bills WHERE sender_citizenid = ? AND status = ?', {
+    local result = MySQL.query.await('SELECT * FROM bills WHERE sender_citizenid = ? AND status = ?', {
         player.PlayerData.citizenid,
         'Paid'
     })
@@ -49,7 +49,7 @@ end
 function getBillsToPay(source)
     local src = source
     local player = QBCore.Functions.GetPlayer(src)
-    local result = MySQL.Sync.fetchAll('SELECT * FROM bills WHERE recipient_citizenid = ? AND status = ?', {
+    local result = MySQL.query.await('SELECT * FROM bills WHERE recipient_citizenid = ? AND status = ?', {
         player.PlayerData.citizenid,
         'Unpaid'
     })
@@ -59,7 +59,7 @@ end
 function getPaidBills(source)
     local src = source
     local player = QBCore.Functions.GetPlayer(src)
-    local result = MySQL.Sync.fetchAll('SELECT * FROM bills WHERE recipient_citizenid = ? AND status = ?', {
+    local result = MySQL.query.await('SELECT * FROM bills WHERE recipient_citizenid = ? AND status = ?', {
         player.PlayerData.citizenid,
         'Paid'
     })
@@ -89,7 +89,7 @@ AddEventHandler('billing:server:sendBill', function(data)
     if isAllowedToBill(sender) then
         local datetime = os.date('%Y-%m-%d %H:%M:%S')
         local sql = 'INSERT INTO bills (bill_date, amount, sender_account, sender_name, sender_citizenid, recipient_name, recipient_citizenid, status, status_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        MySQL.Async.insert(sql, {
+        MySQL.insert(sql, {
             datetime,
             billAmount,
             senderAccount,
@@ -170,7 +170,7 @@ AddEventHandler('billing:server:payBill', function(data)
             TriggerClientEvent('QBCore:Notify', sender.PlayerData.source, Lang:t('info.bill_paid_sender', { billId = bill.id, amount = comma_value(bill.amount), recipient = bill.recipient_name }), 'success')
         end
         TriggerClientEvent('QBCore:Notify', src, Lang:t('success.bill_paid_recipient', { billId = bill.id, amount = comma_value(bill.amount), senderName = bill.sender_name, account = bill.sender_account }), 'success')
-        MySQL.Async.execute('UPDATE bills SET status = ?, status_date = ? WHERE id = ? AND bill_date = ? AND amount = ? AND sender_account = ? AND recipient_citizenid = ? AND status = ?', {
+        MySQL.update('UPDATE bills SET status = ?, status_date = ? WHERE id = ? AND bill_date = ? AND amount = ? AND sender_account = ? AND recipient_citizenid = ? AND status = ?', {
             'Paid',
             datetime,
             bill.id,
@@ -190,7 +190,7 @@ AddEventHandler('billing:server:deleteBill', function(data)
     local src = source
     local bill = data.bill
     local recipient = QBCore.Functions.GetPlayerByCitizenId(bill.recipient_citizenid)
-    MySQL.Async.execute('DELETE FROM bills WHERE id = ? AND bill_date = ? AND amount = ? AND sender_account = ? AND recipient_citizenid = ? AND status = ?', {
+    MySQL.query('DELETE FROM bills WHERE id = ? AND bill_date = ? AND amount = ? AND sender_account = ? AND recipient_citizenid = ? AND status = ?', {
         bill.id,
         bill.bill_date,
         bill.amount,
