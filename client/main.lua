@@ -474,3 +474,7 @@ RegisterNetEvent('g-billing:client:openPaidBillsMenu', function(bills)
     }
     exports['qb-menu']:openMenu(billsMenu)
 end)
+
+RegisterNetEvent('g-billing:client:sendText', function(subject, message)
+    TriggerServerEvent('qb-phone:server:sendNewMail', { sender = Lang:t('other.bill_text_sender'), subject = subject, message = message })
+end)

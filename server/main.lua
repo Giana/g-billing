@@ -101,8 +101,8 @@ AddEventHandler('g-billing:server:sendBill', function(data)
             datetime
         }, function(result)
             if result > 0 then
-                TriggerClientEvent('QBCore:Notify', src, Lang:t('success.bill_sent', { amount = comma_value(billAmount), recipient = recipientFullName }), 'success')
-                TriggerClientEvent('QBCore:Notify', recipient.PlayerData.source, Lang:t('info.bill_received', { amount = comma_value(billAmount), sender = senderFullName, account = senderAccount }), 'success')
+                TriggerEvent('g-billing:server:notifyBillStatusChange', src, Lang:t('success.bill_sent', { amount = comma_value(billAmount), recipient = recipientFullName }), 'success', Lang:t('other.bill_sent_text_subject'), Lang:t('success.bill_sent_text', { amount = comma_value(billAmount), recipient = recipientFullName }))
+                TriggerEvent('g-billing:server:notifyBillStatusChange', recipient.PlayerData.source, Lang:t('info.bill_received', { amount = comma_value(billAmount), sender = senderFullName, account = senderAccount }), 'success', Lang:t('other.bill_received_text_subject'), Lang:t('info.bill_received_text', { amount = comma_value(billAmount), sender = senderFullName, account = senderAccount }))
             else
                 TriggerClientEvent('QBCore:Notify', src, Lang:t('error.sending_bill'), 'error')
             end
@@ -167,9 +167,9 @@ AddEventHandler('g-billing:server:payBill', function(data)
         local sender = QBCore.Functions.GetPlayerByCitizenId(bill.sender_citizenid)
         local datetime = os.date('%Y-%m-%d %H:%M:%S')
         if sender then
-            TriggerClientEvent('QBCore:Notify', sender.PlayerData.source, Lang:t('info.bill_paid_sender', { billId = bill.id, amount = comma_value(bill.amount), recipient = bill.recipient_name }), 'success')
+            TriggerEvent('g-billing:server:notifyBillStatusChange', sender.PlayerData.source, Lang:t('info.bill_paid_sender', { billId = bill.id, amount = comma_value(bill.amount), recipient = bill.recipient_name }), 'success', Lang:t('other.sent_bill_paid_text_subject'), Lang:t('info.bill_paid_sender_text', { billId = bill.id, amount = comma_value(bill.amount), recipient = bill.recipient_name }))
         end
-        TriggerClientEvent('QBCore:Notify', src, Lang:t('success.bill_paid_recipient', { billId = bill.id, amount = comma_value(bill.amount), senderName = bill.sender_name, account = bill.sender_account }), 'success')
+        TriggerEvent('g-billing:server:notifyBillStatusChange', src, Lang:t('success.bill_paid_recipient', { billId = bill.id, amount = comma_value(bill.amount), senderName = bill.sender_name, account = bill.sender_account }), 'success', Lang:t('other.received_bill_paid_text_subject'), Lang:t('success.bill_paid_recipient_text', { billId = bill.id, amount = comma_value(bill.amount), senderName = bill.sender_name, account = bill.sender_account }))
         MySQL.update('UPDATE bills SET status = ?, status_date = ? WHERE id = ? AND bill_date = ? AND amount = ? AND sender_account = ? AND recipient_citizenid = ? AND status = ?', {
             'Paid',
             datetime,
@@ -199,9 +199,19 @@ AddEventHandler('g-billing:server:deleteBill', function(data)
         bill.status
     })
     if recipient then
-        TriggerClientEvent('QBCore:Notify', recipient.PlayerData.source, Lang:t('info.bill_canceled_recipient', { billId = bill.id, amount = comma_value(bill.amount), senderName = bill.sender_name, account = bill.sender_account }), 'success')
+        TriggerEvent('g-billing:server:notifyBillStatusChange', recipient.PlayerData.source, Lang:t('info.bill_canceled_recipient', { billId = bill.id, amount = comma_value(bill.amount), senderName = bill.sender_name, account = bill.sender_account }), 'success', Lang:t('other.received_bill_canceled_text_subject'), Lang:t('info.bill_canceled_recipient_text', { billId = bill.id, amount = comma_value(bill.amount), senderName = bill.sender_name, account = bill.sender_account }))
     end
-    TriggerClientEvent('QBCore:Notify', src, Lang:t('success.bill_canceled_sender'), 'success')
+    TriggerEvent('g-billing:server:notifyBillStatusChange', src, Lang:t('success.bill_canceled_sender', { billId = bill.id, amount = comma_value(bill.amount), recipient =  bill.recipient_name}), 'success', Lang:t('other.sent_bill_canceled_text_subject'), Lang:t('success.bill_canceled_sender_text', { billId = bill.id, amount = comma_value(bill.amount), recipient =  bill.recipient_name}))
+end)
+
+RegisterNetEvent('g-billing:server:notifyBillStatusChange')
+AddEventHandler('g-billing:server:notifyBillStatusChange', function(recipient, notificationMessage, notificationMessageType, textSubject, textMessage)
+    if Config.EnablePopupNotification then
+        TriggerClientEvent('QBCore:Notify', recipient, notificationMessage, notificationMessageType)
+    end
+    if Config.EnableTextNotifications then
+        TriggerClientEvent('g-billing:client:sendText', recipient, textSubject, textMessage)
+    end
 end)
 
 -- Callbacks --

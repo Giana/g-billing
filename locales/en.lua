@@ -13,12 +13,18 @@ local Translations = {
     success = {
         bill_sent = 'Bill sent - Amount: $%{amount} - To: %{recipient}',
         bill_paid_recipient = 'Bill paid - #%{billId} - Amount: $%{amount} - Paid to: %{senderName} "%{account}"',
-        bill_canceled_sender = 'Bill canceled'
+        bill_canceled_sender = 'Bill canceled - #%{billId} - Amount: $%{amount} - To: %{recipient}',
+        bill_sent_text = 'Bill sent<br>Amount: $%{amount}<br>To: %{recipient}<br><br>Access bill via /billing',
+        bill_paid_recipient_text = 'Bill paid<br>#%{billId}<br>Amount: $%{amount}<br>Paid to: %{senderName} "%{account}"<br><br>Access bill via /billing',
+        bill_canceled_sender_text = 'Bill canceled<br>#%{billId}<br>Amount: $%{amount}<br>To: %{recipient}<br><br>Access bill via /billing'
     },
     info = {
         bill_received = 'Bill received - Amount: $%{amount} - From: %{sender} "%{account}"',
         bill_paid_sender = 'Bill paid - #%{billId} - Amount: $%{amount} - Paid by: %{recipient}',
-        bill_canceled_recipient = 'Bill canceled - #%{billId} - Amount: $%{amount} - Due to: %{senderName} "%{account}"'
+        bill_canceled_recipient = 'Bill canceled - #%{billId} - Amount: $%{amount} - Due to: %{senderName} "%{account}"',
+        bill_received_text = 'Bill received<br>Amount: $%{amount}<br>From: %{sender} "%{account}"<br><br>Access bill via /billing',
+        bill_paid_sender_text = 'Bill paid<br>#%{billId}<br>Amount: $%{amount}<br>Paid by: %{recipient}<br><br>Access bill via /billing',
+        bill_canceled_recipient_text = 'Bill canceled<br>#%{billId}<br>Amount: $%{amount}<br>Due to: %{senderName} "%{account}"<br><br>Access bill via /billing'
     },
     menu = {
         confirm_send = 'Are you sure you want to send this bill?',
@@ -64,7 +70,14 @@ local Translations = {
         paid_bills_info = 'Date: %{date}<br>Due to: %{senderName} "%{account}"<br>Paid: %{datePaid}'
     },
     other = {
-        bill_pay_desc = 'Bill pay'
+        bill_pay_desc = 'Bill pay',
+        bill_text_sender = 'Billing Department',
+        bill_sent_text_subject = 'Bill Sent',
+        bill_received_text_subject = 'Bill Received',
+        sent_bill_paid_text_subject = 'Sent Bill Paid',
+        received_bill_paid_text_subject = 'Received Bill Paid',
+        sent_bill_canceled_text_subject = 'Sent Bill Canceled',
+        received_bill_canceled_text_subject = 'Received Bill Canceled'
     }
 }
 

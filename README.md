@@ -15,6 +15,7 @@ G-Billing is a script for FiveM QBCore providing a simple and intuitive menu (ac
   - Send new bills
   - Pay owed bills
   - Cancel pending bills
+- Enable/disable pop-up and/or text notifications regarding bill status changes
 
 **IMAGES**
 -----
