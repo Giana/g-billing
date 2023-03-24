@@ -51,7 +51,7 @@ local function engageSendBillMenu()
             txt = Lang:t('menu.account_name', { account = senderData.job.name })
         },
         {
-            header = Lang:t('menu.send_bill_bullet'),
+            header = Lang:t('menu.send_a_bill_bullet'),
             params = {
                 event = 'g-billing:client:createBill'
             }
@@ -164,7 +164,7 @@ RegisterNetEvent('g-billing:client:engageChooseBillViewMenu', function()
             }
         },
         {
-            header = Lang:t('menu.send_bill_bullet'),
+            header = Lang:t('menu.send_new_bill_bullet'),
             params = {
                 event = 'g-billing:client:canSendBill'
             }
