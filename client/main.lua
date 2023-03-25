@@ -1,5 +1,7 @@
 QBCore = exports['qb-core']:GetCoreObject()
 
+-- TODO: Somehow tell the player that they can bill nearby by leaving the ID field blank
+
 -- Functions --
 
 local function comma_value(amount)
@@ -51,25 +53,59 @@ local function engageSendBillMenu()
             txt = Lang:t('menu.account_name', { account = senderData.job.name })
         },
         {
-            header = Lang:t('menu.send_a_bill_bullet'),
+            header = Lang:t('menu.send_a_bill_id_bullet'),
             params = {
-                event = 'g-billing:client:createBill'
+                event = 'g-billing:client:createBill',
+                args = {
+                    billingClosestPlayer = false
+                }
             }
-        },
-        {
-            header = Lang:t('menu.return_bullet'),
+        }
+    }
+    if Config.AllowNearbyBilling then
+        menu[#menu + 1] = {
+            header = Lang:t('menu.send_a_bill_closest_bullet'),
             params = {
-                event = 'g-billing:client:engageChooseBillViewMenu'
+                event = 'g-billing:client:createBill',
+                args = {
+                    billingClosestPlayer = true
+                }
             }
-        },
-        {
-            header = Lang:t('menu.cancel_bullet'),
-            params = {
-                event = exports['qb-menu']:closeMenu()
-            }
-        },
+        }
+    end
+    menu[#menu + 1] = {
+        header = Lang:t('menu.return_bullet'),
+        params = {
+            event = 'g-billing:client:engageChooseBillViewMenu'
+        }
+    }
+    menu[#menu + 1] = {
+        header = Lang:t('menu.cancel_bullet'),
+        params = {
+            event = exports['qb-menu']:closeMenu()
+        }
     }
     exports['qb-menu']:openMenu(menu)
+end
+
+local function getClosestPlayer()
+    local closestPlayers = QBCore.Functions.GetPlayersFromCoords()
+    local closestDistance = -1
+    local closestPlayer = -1
+    local coords = GetEntityCoords(PlayerPedId())
+
+    for i = 1, #closestPlayers, 1 do
+        if closestPlayers[i] ~= PlayerId() then
+            local pos = GetEntityCoords(GetPlayerPed(closestPlayers[i]))
+            local distance = #(pos - coords)
+
+            if closestDistance == -1 or closestDistance > distance then
+                closestPlayer = closestPlayers[i]
+                closestDistance = distance
+            end
+        end
+    end
+    return closestPlayer, closestDistance
 end
 
 -- Commands --
@@ -105,43 +141,82 @@ RegisterNetEvent('g-billing:client:notifyOfPaidBill', function()
     TriggerServerEvent('g-billing:server:getPaidBills')
 end)
 
-RegisterNetEvent('g-billing:client:createBill', function()
-    local recipientID = nil
-    local billAmount = nil
-
-    local input = exports['qb-input']:ShowInput({
-        header = Lang:t('menu.new_bill'),
-        submitText = Lang:t('menu.confirm'),
-        inputs = {
-            {
-                text = Lang:t('menu.recipient_id'),
-                name = 'id',
-                type = 'number',
-                isRequired = true
-            },
-            {
-                text = Lang:t('menu.amount'),
-                name = 'amount',
-                type = 'number',
-                isRequired = true
+RegisterNetEvent('g-billing:client:createBill', function(data)
+    local recipientID
+    local billAmount
+    local billingClosestPlayer = data.billingClosestPlayer
+    if billingClosestPlayer then
+        local recipientPlayer, distance = getClosestPlayer()
+        if recipientPlayer ~= -1 and distance < 4 then
+            recipientID = GetPlayerServerId(recipientPlayer)
+            if not recipientID then
+                QBCore.Functions.Notify(Lang:t('error.getting_id'), 'error')
+                return
+            end
+            local input = exports['qb-input']:ShowInput({
+                header = Lang:t('menu.new_bill'),
+                submitText = Lang:t('menu.confirm'),
+                inputs = {
+                    {
+                        text = Lang:t('menu.amount'),
+                        name = 'amount',
+                        type = 'number',
+                        isRequired = true
+                    }
+                }
+            })
+            if not input then
+                return
+            end
+            billAmount = input.amount
+            if not billAmount or billAmount == '' or tonumber(billAmount) <= 0 then
+                QBCore.Functions.Notify(Lang:t('error.getting_amount'), 'error')
+                return
+            end
+        else
+            QBCore.Functions.Notify(Lang:t('error.no_nearby'), 'error')
+            engageSendBillMenu()
+            return
+        end
+    else
+        local input = exports['qb-input']:ShowInput({
+            header = Lang:t('menu.new_bill'),
+            submitText = Lang:t('menu.confirm'),
+            inputs = {
+                {
+                    text = Lang:t('menu.recipient_id'),
+                    name = 'id',
+                    type = 'number',
+                    isRequired = true
+                },
+                {
+                    text = Lang:t('menu.amount'),
+                    name = 'amount',
+                    type = 'number',
+                    isRequired = true
+                }
             }
-        },
-    })
-    recipientID = input.id
-    billAmount = input.amount
-    if not recipientID then
-        QBCore.Functions.Notify(Lang:t('error.getting_id'), 'error')
-        return
-    end
-    if not billAmount then
-        QBCore.Functions.Notify(Lang:t('error.getting_amount'), 'error')
-        return
+        })
+        if not input then
+            return
+        end
+        recipientID = input.id
+        billAmount = input.amount
+        if not recipientID or recipientID == '' then
+            QBCore.Functions.Notify(Lang:t('error.getting_id'), 'error')
+            return
+        end
+        if not billAmount or billAmount == '' or tonumber(billAmount) <= 0 then
+            QBCore.Functions.Notify(Lang:t('error.getting_amount'), 'error')
+            return
+        end
     end
     QBCore.Functions.TriggerCallback('g-billing:server:getPlayerFromId', function(validRecipient)
         if validRecipient then
             engageConfirmBillMenu(billAmount, validRecipient)
         else
             QBCore.Functions.Notify(Lang:t('error.getting_player'), 'error')
+            engageSendBillMenu()
         end
     end, recipientID)
 end)
