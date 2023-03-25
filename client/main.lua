@@ -24,7 +24,7 @@ local function engageConfirmBillMenu(billAmount, recipient)
         {
             header = Lang:t('menu.no_changed_mind'),
             params = {
-                event = exports['qb-menu']:closeMenu()
+                event = 'g-billing:client:engageChooseBillViewMenu'
             }
         },
         {
@@ -102,6 +102,7 @@ end)
 
 RegisterNetEvent('g-billing:client:notifyOfPaidBill', function()
     QBCore.Functions.Notify(Lang:t('error.already_paid'), 'error')
+    TriggerServerEvent('g-billing:server:getPaidBills')
 end)
 
 RegisterNetEvent('g-billing:client:createBill', function()
@@ -477,4 +478,12 @@ end)
 
 RegisterNetEvent('g-billing:client:sendText', function(subject, message)
     TriggerServerEvent('qb-phone:server:sendNewMail', { sender = Lang:t('other.bill_text_sender'), subject = subject, message = message })
+end)
+
+RegisterNetEvent('g-billing:client:getBillsToPay', function()
+    TriggerServerEvent('g-billing:server:getBillsToPay')
+end)
+
+RegisterNetEvent('g-billing:client:getPendingBilled', function()
+    TriggerServerEvent('g-billing:server:getPendingBilled')
 end)

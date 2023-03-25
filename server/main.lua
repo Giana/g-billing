@@ -110,6 +110,7 @@ AddEventHandler('g-billing:server:sendBill', function(data)
     else
         TriggerClientEvent('QBCore:Notify', src, Lang:t('error.not_permitted'), 'error')
     end
+    TriggerClientEvent('g-billing:client:engageChooseBillViewMenu', src)
 end)
 
 RegisterNetEvent('g-billing:server:getPendingBilled')
@@ -183,6 +184,7 @@ AddEventHandler('g-billing:server:payBill', function(data)
     else
         TriggerClientEvent('QBCore:Notify', src, Lang:t('error.not_enough_money'), 'error')
     end
+    TriggerClientEvent('g-billing:client:getBillsToPay', src)
 end)
 
 RegisterNetEvent('g-billing:server:deleteBill')
@@ -202,6 +204,7 @@ AddEventHandler('g-billing:server:deleteBill', function(data)
         TriggerEvent('g-billing:server:notifyBillStatusChange', recipient.PlayerData.source, Lang:t('info.bill_canceled_recipient', { billId = bill.id, amount = comma_value(bill.amount), senderName = bill.sender_name, account = bill.sender_account }), 'success', Lang:t('other.received_bill_canceled_text_subject'), Lang:t('info.bill_canceled_recipient_text', { billId = bill.id, amount = comma_value(bill.amount), senderName = bill.sender_name, account = bill.sender_account }))
     end
     TriggerEvent('g-billing:server:notifyBillStatusChange', src, Lang:t('success.bill_canceled_sender', { billId = bill.id, amount = comma_value(bill.amount), recipient = bill.recipient_name }), 'success', Lang:t('other.sent_bill_canceled_text_subject'), Lang:t('success.bill_canceled_sender_text', { billId = bill.id, amount = comma_value(bill.amount), recipient = bill.recipient_name }))
+    TriggerClientEvent('g-billing:client:getPendingBilled', src)
 end)
 
 RegisterNetEvent('g-billing:server:notifyBillStatusChange')
