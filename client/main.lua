@@ -325,6 +325,14 @@ RegisterNetEvent('g-billing:client:openPendingBilledMenu', function(bills)
             txt = Lang:t('menu.total_owed', { amount = comma_value(totalDue) })
         }
     }
+    if #bills > 6 then
+        billsMenu[#billsMenu + 1] = {
+            header = Lang:t('menu.return_bullet'),
+            params = {
+                event = 'g-billing:client:engageChooseSentBillsViewMenu'
+            }
+        }
+    end
     for i = #ordered_keys, 1, -1 do
         local v = bills[i]
         billsMenu[#billsMenu + 1] = {
@@ -368,6 +376,14 @@ RegisterNetEvent('g-billing:client:openPaidBilledMenu', function(bills)
             txt = Lang:t('menu.total_paid', { amount = comma_value(totalPaid) })
         }
     }
+    if #bills > 6 then
+        billsMenu[#billsMenu + 1] = {
+            header = Lang:t('menu.return_bullet'),
+            params = {
+                event = 'g-billing:client:engageChooseSentBillsViewMenu'
+            }
+        }
+    end
     for i = #ordered_keys, 1, -1 do
         local v = bills[i]
         billsMenu[#billsMenu + 1] = {
@@ -408,6 +424,14 @@ RegisterNetEvent('g-billing:client:openBillsToPayMenu', function(bills)
             txt = Lang:t('menu.total_due', { amount = comma_value(totalDue) })
         }
     }
+    if #bills > 6 then
+        billsMenu[#billsMenu + 1] = {
+            header = Lang:t('menu.return_bullet'),
+            params = {
+                event = 'g-billing:client:engageChooseYourBillsViewMenu'
+            }
+        }
+    end
     for i = #ordered_keys, 1, -1 do
         local v = bills[i]
         billsMenu[#billsMenu + 1] = {
@@ -451,6 +475,14 @@ RegisterNetEvent('g-billing:client:openPaidBillsMenu', function(bills)
             txt = Lang:t('menu.total_paid', { amount = comma_value(totalPaid) })
         }
     }
+    if #bills > 6 then
+        billsMenu[#billsMenu + 1] = {
+            header = Lang:t('menu.return_bullet'),
+            params = {
+                event = 'g-billing:client:engageChooseYourBillsViewMenu'
+            }
+        }
+    end
     for i = #ordered_keys, 1, -1 do
         local v = bills[i]
         billsMenu[#billsMenu + 1] = {
