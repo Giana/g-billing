@@ -137,6 +137,11 @@ RegisterNetEvent('g-billing:client:notifyOfPaidBill', function()
     TriggerServerEvent('g-billing:server:getPaidBills')
 end)
 
+RegisterNetEvent('g-billing:client:notifyOfPaidBilled', function()
+    QBCore.Functions.Notify(Lang:t('error.already_paid'), 'error')
+    TriggerServerEvent('g-billing:server:getPaidBilled')
+end)
+
 RegisterNetEvent('g-billing:client:createBill', function(data)
     local recipientID
     local billAmount
@@ -461,7 +466,7 @@ RegisterNetEvent('g-billing:client:openPaidBilledMenu', function(bills)
             header = Lang:t('menu.id_amount', { id = v.id, amount = comma_value(v.amount) }),
             txt = Lang:t('menu.paid_billed_info', { date = v.bill_date, account = v.sender_account, recipientName = v.recipient_name, recipientCid = v.recipient_citizenid, datePaid = v.status_date }),
             params = {
-                event = 'g-billing:client:notifyOfPaidBill'
+                event = 'g-billing:client:notifyOfPaidBilled'
             }
         }
     end
