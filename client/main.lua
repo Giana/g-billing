@@ -1,7 +1,5 @@
 QBCore = exports['qb-core']:GetCoreObject()
 
--- TODO: Somehow tell the player that they can bill nearby by leaving the ID field blank
-
 -- Functions --
 
 local function comma_value(amount)
@@ -222,7 +220,7 @@ end)
 RegisterNetEvent('g-billing:client:engageChooseBillViewMenu', function()
     local menu = {
         {
-            header = Lang:t('menu.options'),
+            header = Lang:t('menu.billing_options'),
             isMenuHeader = true
         },
         {
