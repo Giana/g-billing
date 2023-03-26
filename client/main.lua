@@ -117,13 +117,11 @@ end)
 -- Events --
 
 RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
-    TriggerServerEvent('g-billing:server:RequestCommands')
+    TriggerEvent('g-billing:client:RequestCommands')
 end)
 
-RegisterNetEvent('g-billing:client:RequestCommands', function(isAllowed)
-    if isAllowed then
-        TriggerServerEvent('chat:addSuggestion', '/' .. Config.BillingCommand, {})
-    end
+RegisterNetEvent('g-billing:client:RequestCommands', function()
+    TriggerEvent('chat:addSuggestion', '/' .. Config.BillingCommand, Lang:t('other.chat_desc'))
 end)
 
 RegisterNetEvent('g-billing:client:canSendBill', function()

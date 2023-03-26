@@ -68,15 +68,6 @@ end
 
 -- Events --
 
-RegisterNetEvent('g-billing:server:RequestCommands')
-AddEventHandler('g-billing:server:RequestCommands', function()
-    local src = source
-    local player = QBCore.Functions.GetPlayer(src)
-    if isAllowedToBill(player) then
-        TriggerClientEvent('g-billing:client:RequestCommands', src, true)
-    end
-end)
-
 RegisterNetEvent('g-billing:server:sendBill')
 AddEventHandler('g-billing:server:sendBill', function(data)
     local src = source

@@ -76,6 +76,7 @@ local Translations = {
         bill_received_text_subject = 'Bill Received',
         bill_sent_text_subject = 'Bill Sent',
         bill_text_sender = 'Billing Department',
+        chat_desc = 'Open billing menu',
         received_bill_canceled_text_subject = 'Received Bill Canceled',
         received_bill_paid_text_subject = 'Received Bill Paid',
         sent_bill_canceled_text_subject = 'Sent Bill Canceled',
