@@ -29,7 +29,7 @@ end
 function getPendingBilled(source)
     local src = source
     local player = QBCore.Functions.GetPlayer(src)
-    local result = MySQL.Sync.fetchAll('SELECT * FROM bills WHERE sender_citizenid = ? AND status = ?', {
+    local result = MySQL.query.await('SELECT * FROM bills WHERE sender_citizenid = ? AND status = ?', {
         player.PlayerData.citizenid,
         'Unpaid'
     })
@@ -39,7 +39,7 @@ end
 function getPaidBilled(source)
     local src = source
     local player = QBCore.Functions.GetPlayer(src)
-    local result = MySQL.Sync.fetchAll('SELECT * FROM bills WHERE sender_citizenid = ? AND status = ?', {
+    local result = MySQL.query.await('SELECT * FROM bills WHERE sender_citizenid = ? AND status = ?', {
         player.PlayerData.citizenid,
         'Paid'
     })
@@ -49,7 +49,7 @@ end
 function getBillsToPay(source)
     local src = source
     local player = QBCore.Functions.GetPlayer(src)
-    local result = MySQL.Sync.fetchAll('SELECT * FROM bills WHERE recipient_citizenid = ? AND status = ?', {
+    local result = MySQL.query.await('SELECT * FROM bills WHERE recipient_citizenid = ? AND status = ?', {
         player.PlayerData.citizenid,
         'Unpaid'
     })
@@ -59,7 +59,7 @@ end
 function getPaidBills(source)
     local src = source
     local player = QBCore.Functions.GetPlayer(src)
-    local result = MySQL.Sync.fetchAll('SELECT * FROM bills WHERE recipient_citizenid = ? AND status = ?', {
+    local result = MySQL.query.await('SELECT * FROM bills WHERE recipient_citizenid = ? AND status = ?', {
         player.PlayerData.citizenid,
         'Paid'
     })
@@ -68,17 +68,8 @@ end
 
 -- Events --
 
-RegisterNetEvent('billing:server:RequestCommands')
-AddEventHandler('billing:server:RequestCommands', function()
-    local src = source
-    local player = QBCore.Functions.GetPlayer(src)
-    if isAllowedToBill(player) then
-        TriggerClientEvent('billing:client:RequestCommands', src, true)
-    end
-end)
-
-RegisterNetEvent('billing:server:sendBill')
-AddEventHandler('billing:server:sendBill', function(data)
+RegisterNetEvent('g-billing:server:sendBill')
+AddEventHandler('g-billing:server:sendBill', function(data)
     local src = source
     local sender = QBCore.Functions.GetPlayer(src)
     local billAmount = data.billAmount
@@ -89,7 +80,7 @@ AddEventHandler('billing:server:sendBill', function(data)
     if isAllowedToBill(sender) then
         local datetime = os.date('%Y-%m-%d %H:%M:%S')
         local sql = 'INSERT INTO bills (bill_date, amount, sender_account, sender_name, sender_citizenid, recipient_name, recipient_citizenid, status, status_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        MySQL.Async.insert(sql, {
+        MySQL.insert(sql, {
             datetime,
             billAmount,
             senderAccount,
@@ -101,8 +92,8 @@ AddEventHandler('billing:server:sendBill', function(data)
             datetime
         }, function(result)
             if result > 0 then
-                TriggerClientEvent('QBCore:Notify', src, Lang:t('success.bill_sent', { amount = comma_value(billAmount), recipient = recipientFullName }), 'success')
-                TriggerClientEvent('QBCore:Notify', recipient.PlayerData.source, Lang:t('info.bill_received', { amount = comma_value(billAmount), sender = senderFullName, account = senderAccount }), 'success')
+                TriggerEvent('g-billing:server:notifyBillStatusChange', src, Lang:t('success.bill_sent', { amount = comma_value(billAmount), recipient = recipientFullName }), 'success', Lang:t('other.bill_sent_text_subject'), Lang:t('success.bill_sent_text', { amount = comma_value(billAmount), recipient = recipientFullName }))
+                TriggerEvent('g-billing:server:notifyBillStatusChange', recipient.PlayerData.source, Lang:t('info.bill_received', { amount = comma_value(billAmount), sender = senderFullName, account = senderAccount }), 'success', Lang:t('other.bill_received_text_subject'), Lang:t('info.bill_received_text', { amount = comma_value(billAmount), sender = senderFullName, account = senderAccount }))
             else
                 TriggerClientEvent('QBCore:Notify', src, Lang:t('error.sending_bill'), 'error')
             end
@@ -110,54 +101,55 @@ AddEventHandler('billing:server:sendBill', function(data)
     else
         TriggerClientEvent('QBCore:Notify', src, Lang:t('error.not_permitted'), 'error')
     end
+    TriggerClientEvent('g-billing:client:engageChooseBillViewMenu', src)
 end)
 
-RegisterNetEvent('billing:server:getPendingBilled')
-AddEventHandler('billing:server:getPendingBilled', function()
+RegisterNetEvent('g-billing:server:getPendingBilled')
+AddEventHandler('g-billing:server:getPendingBilled', function()
     local src = source
     local bills = getPendingBilled(src)
     if bills and bills[1] then
-        TriggerClientEvent('billing:client:openPendingBilledMenu', src, bills)
+        TriggerClientEvent('g-billing:client:openPendingBilledMenu', src, bills)
     else
         TriggerClientEvent('QBCore:Notify', src, Lang:t('error.retrieving_bills'), 'error')
     end
 end)
 
-RegisterNetEvent('billing:server:getPaidBilled')
-AddEventHandler('billing:server:getPaidBilled', function()
+RegisterNetEvent('g-billing:server:getPaidBilled')
+AddEventHandler('g-billing:server:getPaidBilled', function()
     local src = source
     local bills = getPaidBilled(src)
     if bills and bills[1] then
-        TriggerClientEvent('billing:client:openPaidBilledMenu', src, bills)
+        TriggerClientEvent('g-billing:client:openPaidBilledMenu', src, bills)
     else
         TriggerClientEvent('QBCore:Notify', src, Lang:t('error.retrieving_bills'), 'error')
     end
 end)
 
-RegisterNetEvent('billing:server:getBillsToPay')
-AddEventHandler('billing:server:getBillsToPay', function()
+RegisterNetEvent('g-billing:server:getBillsToPay')
+AddEventHandler('g-billing:server:getBillsToPay', function()
     local src = source
     local bills = getBillsToPay(src)
     if bills and bills[1] then
-        TriggerClientEvent('billing:client:openBillsToPayMenu', src, bills)
+        TriggerClientEvent('g-billing:client:openBillsToPayMenu', src, bills)
     else
         TriggerClientEvent('QBCore:Notify', src, Lang:t('error.retrieving_bills'), 'error')
     end
 end)
 
-RegisterNetEvent('billing:server:getPaidBills')
-AddEventHandler('billing:server:getPaidBills', function()
+RegisterNetEvent('g-billing:server:getPaidBills')
+AddEventHandler('g-billing:server:getPaidBills', function()
     local src = source
     local bills = getPaidBills(src)
     if bills and bills[1] then
-        TriggerClientEvent('billing:client:openPaidBillsMenu', src, bills)
+        TriggerClientEvent('g-billing:client:openPaidBillsMenu', src, bills)
     else
         TriggerClientEvent('QBCore:Notify', src, Lang:t('error.retrieving_bills'), 'error')
     end
 end)
 
-RegisterNetEvent('billing:server:payBill')
-AddEventHandler('billing:server:payBill', function(data)
+RegisterNetEvent('g-billing:server:payBill')
+AddEventHandler('g-billing:server:payBill', function(data)
     local src = source
     local player = QBCore.Functions.GetPlayer(src)
     local bill = data.bill
@@ -167,10 +159,10 @@ AddEventHandler('billing:server:payBill', function(data)
         local sender = QBCore.Functions.GetPlayerByCitizenId(bill.sender_citizenid)
         local datetime = os.date('%Y-%m-%d %H:%M:%S')
         if sender then
-            TriggerClientEvent('QBCore:Notify', sender.PlayerData.source, Lang:t('info.bill_paid_sender', { billId = bill.id, amount = comma_value(bill.amount), recipient = bill.recipient_name }), 'success')
+            TriggerEvent('g-billing:server:notifyBillStatusChange', sender.PlayerData.source, Lang:t('info.bill_paid_sender', { billId = bill.id, amount = comma_value(bill.amount), recipient = bill.recipient_name }), 'success', Lang:t('other.sent_bill_paid_text_subject'), Lang:t('info.bill_paid_sender_text', { billId = bill.id, amount = comma_value(bill.amount), recipient = bill.recipient_name }))
         end
-        TriggerClientEvent('QBCore:Notify', src, Lang:t('success.bill_paid_recipient', { billId = bill.id, amount = comma_value(bill.amount), senderName = bill.sender_name, account = bill.sender_account }), 'success')
-        MySQL.Async.execute('UPDATE bills SET status = ?, status_date = ? WHERE id = ? AND bill_date = ? AND amount = ? AND sender_account = ? AND recipient_citizenid = ? AND status = ?', {
+        TriggerEvent('g-billing:server:notifyBillStatusChange', src, Lang:t('success.bill_paid_recipient', { billId = bill.id, amount = comma_value(bill.amount), senderName = bill.sender_name, account = bill.sender_account }), 'success', Lang:t('other.received_bill_paid_text_subject'), Lang:t('success.bill_paid_recipient_text', { billId = bill.id, amount = comma_value(bill.amount), senderName = bill.sender_name, account = bill.sender_account }))
+        MySQL.update('UPDATE bills SET status = ?, status_date = ? WHERE id = ? AND bill_date = ? AND amount = ? AND sender_account = ? AND recipient_citizenid = ? AND status = ?', {
             'Paid',
             datetime,
             bill.id,
@@ -183,14 +175,15 @@ AddEventHandler('billing:server:payBill', function(data)
     else
         TriggerClientEvent('QBCore:Notify', src, Lang:t('error.not_enough_money'), 'error')
     end
+    TriggerClientEvent('g-billing:client:getBillsToPay', src)
 end)
 
-RegisterNetEvent('billing:server:deleteBill')
-AddEventHandler('billing:server:deleteBill', function(data)
+RegisterNetEvent('g-billing:server:deleteBill')
+AddEventHandler('g-billing:server:deleteBill', function(data)
     local src = source
     local bill = data.bill
     local recipient = QBCore.Functions.GetPlayerByCitizenId(bill.recipient_citizenid)
-    MySQL.Async.execute('DELETE FROM bills WHERE id = ? AND bill_date = ? AND amount = ? AND sender_account = ? AND recipient_citizenid = ? AND status = ?', {
+    MySQL.query('DELETE FROM bills WHERE id = ? AND bill_date = ? AND amount = ? AND sender_account = ? AND recipient_citizenid = ? AND status = ?', {
         bill.id,
         bill.bill_date,
         bill.amount,
@@ -199,14 +192,25 @@ AddEventHandler('billing:server:deleteBill', function(data)
         bill.status
     })
     if recipient then
-        TriggerClientEvent('QBCore:Notify', recipient.PlayerData.source, Lang:t('info.bill_canceled_recipient', { billId = bill.id, amount = comma_value(bill.amount), senderName = bill.sender_name, account = bill.sender_account }), 'success')
+        TriggerEvent('g-billing:server:notifyBillStatusChange', recipient.PlayerData.source, Lang:t('info.bill_canceled_recipient', { billId = bill.id, amount = comma_value(bill.amount), senderName = bill.sender_name, account = bill.sender_account }), 'success', Lang:t('other.received_bill_canceled_text_subject'), Lang:t('info.bill_canceled_recipient_text', { billId = bill.id, amount = comma_value(bill.amount), senderName = bill.sender_name, account = bill.sender_account }))
     end
-    TriggerClientEvent('QBCore:Notify', src, Lang:t('success.bill_canceled_sender'), 'success')
+    TriggerEvent('g-billing:server:notifyBillStatusChange', src, Lang:t('success.bill_canceled_sender', { billId = bill.id, amount = comma_value(bill.amount), recipient = bill.recipient_name }), 'success', Lang:t('other.sent_bill_canceled_text_subject'), Lang:t('success.bill_canceled_sender_text', { billId = bill.id, amount = comma_value(bill.amount), recipient = bill.recipient_name }))
+    TriggerClientEvent('g-billing:client:getPendingBilled', src)
+end)
+
+RegisterNetEvent('g-billing:server:notifyBillStatusChange')
+AddEventHandler('g-billing:server:notifyBillStatusChange', function(recipient, notificationMessage, notificationMessageType, textSubject, textMessage)
+    if Config.EnablePopupNotification then
+        TriggerClientEvent('QBCore:Notify', recipient, notificationMessage, notificationMessageType)
+    end
+    if Config.EnableTextNotifications then
+        TriggerClientEvent('g-billing:client:sendText', recipient, textSubject, textMessage)
+    end
 end)
 
 -- Callbacks --
 
-QBCore.Functions.CreateCallback('billing:server:canSendBill', function(source, cb)
+QBCore.Functions.CreateCallback('g-billing:server:canSendBill', function(source, cb)
     local src = source
     local player = QBCore.Functions.GetPlayer(src)
     if isAllowedToBill(player) then
@@ -215,7 +219,7 @@ QBCore.Functions.CreateCallback('billing:server:canSendBill', function(source, c
     cb(false)
 end)
 
-QBCore.Functions.CreateCallback('billing:server:hasBillsToPay', function(source, cb)
+QBCore.Functions.CreateCallback('g-billing:server:hasBillsToPay', function(source, cb)
     local src = source
     local result = getBillsToPay(src)
     if result and result[1] then
@@ -225,7 +229,7 @@ QBCore.Functions.CreateCallback('billing:server:hasBillsToPay', function(source,
     end
 end)
 
-QBCore.Functions.CreateCallback('billing:server:getPlayerFromId', function(source, cb, playerId)
+QBCore.Functions.CreateCallback('g-billing:server:getPlayerFromId', function(source, cb, playerId)
     local player = QBCore.Functions.GetPlayer(tonumber(playerId))
     cb(player)
 end)

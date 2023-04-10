@@ -24,14 +24,14 @@ local function engageConfirmBillMenu(billAmount, recipient)
         {
             header = Lang:t('menu.no_changed_mind'),
             params = {
-                event = exports['qb-menu']:closeMenu()
+                event = 'g-billing:client:engageChooseBillViewMenu'
             }
         },
         {
             header = Lang:t('menu.send_bill_for_account', { account = QBCore.Functions.GetPlayerData().job.name }),
             params = {
                 isServer = true,
-                event = 'billing:server:sendBill',
+                event = 'g-billing:server:sendBill',
                 args = {
                     billAmount = billAmount,
                     recipient = recipient
@@ -51,47 +51,77 @@ local function engageSendBillMenu()
             txt = Lang:t('menu.account_name', { account = senderData.job.name })
         },
         {
-            header = Lang:t('menu.send_bill_bullet'),
+            header = Lang:t('menu.send_a_bill_id_bullet'),
             params = {
-                event = 'billing:client:createBill'
+                event = 'g-billing:client:createBill',
+                args = {
+                    billingClosestPlayer = false
+                }
             }
-        },
-        {
-            header = Lang:t('menu.return_bullet'),
+        }
+    }
+    if Config.AllowNearbyBilling then
+        menu[#menu + 1] = {
+            header = Lang:t('menu.send_a_bill_closest_bullet'),
             params = {
-                event = 'billing:client:engageChooseBillViewMenu'
+                event = 'g-billing:client:createBill',
+                args = {
+                    billingClosestPlayer = true
+                }
             }
-        },
-        {
-            header = Lang:t('menu.cancel_bullet'),
-            params = {
-                event = exports['qb-menu']:closeMenu()
-            }
-        },
+        }
+    end
+    menu[#menu + 1] = {
+        header = Lang:t('menu.return_bullet'),
+        params = {
+            event = 'g-billing:client:engageChooseBillViewMenu'
+        }
+    }
+    menu[#menu + 1] = {
+        header = Lang:t('menu.cancel_bullet'),
+        params = {
+            event = exports['qb-menu']:closeMenu()
+        }
     }
     exports['qb-menu']:openMenu(menu)
+end
+
+local function getClosestPlayer()
+    local closestPlayers = QBCore.Functions.GetPlayersFromCoords()
+    local closestDistance = -1
+    local closestPlayer = -1
+    local coords = GetEntityCoords(PlayerPedId())
+    for i = 1, #closestPlayers, 1 do
+        if closestPlayers[i] ~= PlayerId() then
+            local pos = GetEntityCoords(GetPlayerPed(closestPlayers[i]))
+            local distance = #(pos - coords)
+            if closestDistance == -1 or closestDistance > distance then
+                closestPlayer = closestPlayers[i]
+                closestDistance = distance
+            end
+        end
+    end
+    return closestPlayer, closestDistance
 end
 
 -- Commands --
 
 RegisterCommand(Config.BillingCommand, function()
-    TriggerEvent('billing:client:engageChooseBillViewMenu')
+    TriggerEvent('g-billing:client:engageChooseBillViewMenu')
 end)
 
 -- Events --
 
 RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
-    TriggerServerEvent('billing:server:RequestCommands')
+    TriggerEvent('g-billing:client:RequestCommands')
 end)
 
-RegisterNetEvent('billing:client:RequestCommands', function(isAllowed)
-    if isAllowed then
-        TriggerServerEvent('chat:addSuggestion', '/' .. Config.BillingCommand, {})
-    end
+RegisterNetEvent('g-billing:client:RequestCommands', function()
+    TriggerEvent('chat:addSuggestion', '/' .. Config.BillingCommand, Lang:t('other.chat_desc'))
 end)
 
-RegisterNetEvent('billing:client:canSendBill', function()
-    QBCore.Functions.TriggerCallback('billing:server:canSendBill', function(canSendBill)
+RegisterNetEvent('g-billing:client:canSendBill', function()
+    QBCore.Functions.TriggerCallback('g-billing:server:canSendBill', function(canSendBill)
         if canSendBill then
             engageSendBillMenu()
         else
@@ -100,73 +130,118 @@ RegisterNetEvent('billing:client:canSendBill', function()
     end)
 end)
 
-RegisterNetEvent('billing:client:notifyOfPaidBill', function()
+RegisterNetEvent('g-billing:client:notifyOfPaidBill', function()
     QBCore.Functions.Notify(Lang:t('error.already_paid'), 'error')
+    TriggerServerEvent('g-billing:server:getPaidBills')
 end)
 
-RegisterNetEvent('billing:client:createBill', function()
-    local recipientID = nil
-    local billAmount = nil
+RegisterNetEvent('g-billing:client:notifyOfPaidBilled', function()
+    QBCore.Functions.Notify(Lang:t('error.already_paid'), 'error')
+    TriggerServerEvent('g-billing:server:getPaidBilled')
+end)
 
-    local input = exports['qb-input']:ShowInput({
-        header = Lang:t('menu.new_bill'),
-        submitText = Lang:t('menu.confirm'),
-        inputs = {
-            {
-                text = Lang:t('menu.recipient_id'),
-                name = 'id',
-                type = 'number',
-                isRequired = true
-            },
-            {
-                text = Lang:t('menu.amount'),
-                name = 'amount',
-                type = 'number',
-                isRequired = true
+RegisterNetEvent('g-billing:client:createBill', function(data)
+    local recipientID
+    local billAmount
+    local billingClosestPlayer = data.billingClosestPlayer
+    if billingClosestPlayer then
+        local recipientPlayer, distance = getClosestPlayer()
+        if recipientPlayer ~= -1 and distance < 4 then
+            recipientID = GetPlayerServerId(recipientPlayer)
+            if not recipientID then
+                QBCore.Functions.Notify(Lang:t('error.getting_id'), 'error')
+                return
+            end
+            local input = exports['qb-input']:ShowInput({
+                header = Lang:t('menu.new_bill'),
+                submitText = Lang:t('menu.confirm'),
+                inputs = {
+                    {
+                        text = Lang:t('menu.amount'),
+                        name = 'amount',
+                        type = 'number',
+                        isRequired = true
+                    }
+                }
+            })
+            if not input then
+                return
+            end
+            billAmount = input.amount
+            if not billAmount or billAmount == '' or tonumber(billAmount) <= 0 then
+                QBCore.Functions.Notify(Lang:t('error.getting_amount'), 'error')
+                return
+            end
+        else
+            QBCore.Functions.Notify(Lang:t('error.no_nearby'), 'error')
+            engageSendBillMenu()
+            return
+        end
+    else
+        local input = exports['qb-input']:ShowInput({
+            header = Lang:t('menu.new_bill'),
+            submitText = Lang:t('menu.confirm'),
+            inputs = {
+                {
+                    text = Lang:t('menu.recipient_id'),
+                    name = 'id',
+                    type = 'number',
+                    isRequired = true
+                },
+                {
+                    text = Lang:t('menu.amount'),
+                    name = 'amount',
+                    type = 'number',
+                    isRequired = true
+                }
             }
-        },
-    })
-    recipientID = input.id
-    billAmount = input.amount
-    if not recipientID then
-        QBCore.Functions.Notify(Lang:t('error.getting_id'), 'error')
-        return
+        })
+        if not input then
+            return
+        end
+        recipientID = input.id
+        billAmount = input.amount
+        if not recipientID or recipientID == '' then
+            QBCore.Functions.Notify(Lang:t('error.getting_id'), 'error')
+            return
+        end
+        if not billAmount or billAmount == '' or tonumber(billAmount) <= 0 then
+            QBCore.Functions.Notify(Lang:t('error.getting_amount'), 'error')
+            return
+        end
     end
-    if not billAmount then
-        QBCore.Functions.Notify(Lang:t('error.getting_amount'), 'error')
-        return
-    end
-    QBCore.Functions.TriggerCallback('billing:server:getPlayerFromId', function(validRecipient)
+    QBCore.Functions.TriggerCallback('g-billing:server:getPlayerFromId', function(validRecipient)
         if validRecipient then
             engageConfirmBillMenu(billAmount, validRecipient)
         else
             QBCore.Functions.Notify(Lang:t('error.getting_player'), 'error')
+            engageSendBillMenu()
         end
     end, recipientID)
 end)
 
-RegisterNetEvent('billing:client:engageChooseBillViewMenu', function()
+RegisterNetEvent('g-billing:client:engageChooseBillViewMenu', function()
     local menu = {
         {
-            header = Lang:t('menu.options'),
+            header = Lang:t('menu.billing_options'),
             isMenuHeader = true
         },
         {
             header = Lang:t('menu.view_your_bills_bullet'),
             params = {
-                event = 'billing:client:engageChooseYourBillsViewMenu'
+                event = 'g-billing:client:engageChooseYourBillsViewMenu'
             }
         },
         {
             header = Lang:t('menu.view_sent_bills_bullet'),
             params = {
-                event = 'billing:client:engageChooseSentBillsViewMenu'
+                event = 'g-billing:client:engageChooseSentBillsViewMenu'
             }
         },
         {
-            header = Lang:t('menu.send_bill_bullet'),
+            header = Lang:t('menu.send_new_bill_bullet'),
             params = {
-                event = 'billing:client:canSendBill'
+                event = 'g-billing:client:canSendBill'
             }
         },
         {
@@ -179,7 +254,7 @@ RegisterNetEvent('billing:client:engageChooseBillViewMenu', function()
     exports['qb-menu']:openMenu(menu)
 end)
 
-RegisterNetEvent('billing:client:engageChooseSentBillsViewMenu', function()
+RegisterNetEvent('g-billing:client:engageChooseSentBillsViewMenu', function()
     local menu = {
         {
             header = Lang:t('menu.sent_bills'),
@@ -189,20 +264,20 @@ RegisterNetEvent('billing:client:engageChooseSentBillsViewMenu', function()
             header = Lang:t('menu.view_pending_bullet'),
             params = {
                 isServer = true,
-                event = 'billing:server:getPendingBilled'
+                event = 'g-billing:server:getPendingBilled'
             }
         },
         {
             header = Lang:t('menu.view_paid_bullet'),
             params = {
                 isServer = true,
-                event = 'billing:server:getPaidBilled'
+                event = 'g-billing:server:getPaidBilled'
             }
         },
         {
             header = Lang:t('menu.return_bullet'),
             params = {
-                event = 'billing:client:engageChooseBillViewMenu'
+                event = 'g-billing:client:engageChooseBillViewMenu'
             }
         },
         {
@@ -215,7 +290,7 @@ RegisterNetEvent('billing:client:engageChooseSentBillsViewMenu', function()
     exports['qb-menu']:openMenu(menu)
 end)
 
-RegisterNetEvent('billing:client:engageChooseYourBillsViewMenu', function()
+RegisterNetEvent('g-billing:client:engageChooseYourBillsViewMenu', function()
     local menu = {
         {
             header = Lang:t('menu.your_bills'),
@@ -225,20 +300,20 @@ RegisterNetEvent('billing:client:engageChooseYourBillsViewMenu', function()
             header = Lang:t('menu.view_current_due_bullet'),
             params = {
                 isServer = true,
-                event = 'billing:server:getBillsToPay'
+                event = 'g-billing:server:getBillsToPay'
             }
         },
         {
             header = Lang:t('menu.view_past_paid_bullet'),
             params = {
                 isServer = true,
-                event = 'billing:server:getPaidBills'
+                event = 'g-billing:server:getPaidBills'
             }
         },
         {
             header = Lang:t('menu.return_bullet'),
             params = {
-                event = 'billing:client:engageChooseBillViewMenu'
+                event = 'g-billing:client:engageChooseBillViewMenu'
             }
         },
         {
@@ -251,7 +326,7 @@ RegisterNetEvent('billing:client:engageChooseYourBillsViewMenu', function()
     exports['qb-menu']:openMenu(menu)
 end)
 
-RegisterNetEvent('billing:client:openConfirmPayBillMenu', function(data)
+RegisterNetEvent('g-billing:client:openConfirmPayBillMenu', function(data)
     local bill = data.bill
     local billsMenu = {
         {
@@ -263,14 +338,14 @@ RegisterNetEvent('billing:client:openConfirmPayBillMenu', function(data)
             header = Lang:t('menu.no_back'),
             params = {
                 isServer = true,
-                event = 'billing:server:getBillsToPay'
+                event = 'g-billing:server:getBillsToPay'
             }
         },
         {
             header = Lang:t('menu.yes_pay'),
             params = {
                 isServer = true,
-                event = 'billing:server:payBill',
+                event = 'g-billing:server:payBill',
                 args = {
                     bill = bill
                 }
@@ -280,7 +355,7 @@ RegisterNetEvent('billing:client:openConfirmPayBillMenu', function(data)
     exports['qb-menu']:openMenu(billsMenu)
 end)
 
-RegisterNetEvent('billing:client:openConfirmCancelBillMenu', function(data)
+RegisterNetEvent('g-billing:client:openConfirmCancelBillMenu', function(data)
     local bill = data.bill
     local billsMenu = {
         {
@@ -292,14 +367,14 @@ RegisterNetEvent('billing:client:openConfirmCancelBillMenu', function(data)
             header = Lang:t('menu.no_back'),
             params = {
                 isServer = true,
-                event = 'billing:server:getPendingBilled'
+                event = 'g-billing:server:getPendingBilled'
             }
         },
         {
             header = Lang:t('menu.yes_cancel'),
             params = {
                 isServer = true,
-                event = 'billing:server:deleteBill',
+                event = 'g-billing:server:deleteBill',
                 args = {
                     bill = bill
                 }
@@ -309,7 +384,7 @@ RegisterNetEvent('billing:client:openConfirmCancelBillMenu', function(data)
     exports['qb-menu']:openMenu(billsMenu)
 end)
 
-RegisterNetEvent('billing:client:openPendingBilledMenu', function(bills)
+RegisterNetEvent('g-billing:client:openPendingBilledMenu', function(bills)
     local ordered_keys = {}
     local totalDue = 0
     for k, v in pairs(bills) do
@@ -324,13 +399,21 @@ RegisterNetEvent('billing:client:openPendingBilledMenu', function(bills)
             txt = Lang:t('menu.total_owed', { amount = comma_value(totalDue) })
         }
     }
+    if #bills > 6 then
+        billsMenu[#billsMenu + 1] = {
+            header = Lang:t('menu.return_bullet'),
+            params = {
+                event = 'g-billing:client:engageChooseSentBillsViewMenu'
+            }
+        }
+    end
     for i = #ordered_keys, 1, -1 do
         local v = bills[i]
         billsMenu[#billsMenu + 1] = {
             header = Lang:t('menu.id_amount', { id = v.id, amount = comma_value(v.amount) }),
             txt = Lang:t('menu.cancel_bill_info', { date = v.bill_date, account = v.sender_account, recipientName = v.recipient_name, recipientCid = v.recipient_citizenid }),
             params = {
-                event = 'billing:client:openConfirmCancelBillMenu',
+                event = 'g-billing:client:openConfirmCancelBillMenu',
                 args = {
                     bill = v
                 }
@@ -340,7 +423,7 @@ RegisterNetEvent('billing:client:openPendingBilledMenu', function(bills)
     billsMenu[#billsMenu + 1] = {
         header = Lang:t('menu.return_bullet'),
         params = {
-            event = 'billing:client:engageChooseSentBillsViewMenu'
+            event = 'g-billing:client:engageChooseSentBillsViewMenu'
         }
     }
     billsMenu[#billsMenu + 1] = {
@@ -352,7 +435,7 @@ RegisterNetEvent('billing:client:openPendingBilledMenu', function(bills)
     exports['qb-menu']:openMenu(billsMenu)
 end)
 
-RegisterNetEvent('billing:client:openPaidBilledMenu', function(bills)
+RegisterNetEvent('g-billing:client:openPaidBilledMenu', function(bills)
     local ordered_keys = {}
     local totalPaid = 0
     for k, v in pairs(bills) do
@@ -367,20 +450,28 @@ RegisterNetEvent('billing:client:openPaidBilledMenu', function(bills)
             txt = Lang:t('menu.total_paid', { amount = comma_value(totalPaid) })
         }
     }
+    if #bills > 6 then
+        billsMenu[#billsMenu + 1] = {
+            header = Lang:t('menu.return_bullet'),
+            params = {
+                event = 'g-billing:client:engageChooseSentBillsViewMenu'
+            }
+        }
+    end
     for i = #ordered_keys, 1, -1 do
         local v = bills[i]
         billsMenu[#billsMenu + 1] = {
             header = Lang:t('menu.id_amount', { id = v.id, amount = comma_value(v.amount) }),
             txt = Lang:t('menu.paid_billed_info', { date = v.bill_date, account = v.sender_account, recipientName = v.recipient_name, recipientCid = v.recipient_citizenid, datePaid = v.status_date }),
             params = {
-                event = 'billing:client:notifyOfPaidBill'
+                event = 'g-billing:client:notifyOfPaidBilled'
             }
         }
     end
     billsMenu[#billsMenu + 1] = {
         header = Lang:t('menu.return_bullet'),
         params = {
-            event = 'billing:client:engageChooseSentBillsViewMenu'
+            event = 'g-billing:client:engageChooseSentBillsViewMenu'
         }
     }
     billsMenu[#billsMenu + 1] = {
@@ -392,7 +483,7 @@ RegisterNetEvent('billing:client:openPaidBilledMenu', function(bills)
     exports['qb-menu']:openMenu(billsMenu)
 end)
 
-RegisterNetEvent('billing:client:openBillsToPayMenu', function(bills)
+RegisterNetEvent('g-billing:client:openBillsToPayMenu', function(bills)
     local ordered_keys = {}
     local totalDue = 0
     for k, v in pairs(bills) do
@@ -407,13 +498,21 @@ RegisterNetEvent('billing:client:openBillsToPayMenu', function(bills)
             txt = Lang:t('menu.total_due', { amount = comma_value(totalDue) })
         }
     }
+    if #bills > 6 then
+        billsMenu[#billsMenu + 1] = {
+            header = Lang:t('menu.return_bullet'),
+            params = {
+                event = 'g-billing:client:engageChooseYourBillsViewMenu'
+            }
+        }
+    end
     for i = #ordered_keys, 1, -1 do
         local v = bills[i]
         billsMenu[#billsMenu + 1] = {
             header = Lang:t('menu.id_amount', { id = v.id, amount = comma_value(v.amount) }),
             txt = Lang:t('menu.unpaid_bill_info', { date = v.bill_date, senderName = v.sender_name, account = v.sender_account }),
             params = {
-                event = 'billing:client:openConfirmPayBillMenu',
+                event = 'g-billing:client:openConfirmPayBillMenu',
                 args = {
                     bill = v
                 }
@@ -423,7 +522,7 @@ RegisterNetEvent('billing:client:openBillsToPayMenu', function(bills)
     billsMenu[#billsMenu + 1] = {
         header = Lang:t('menu.return_bullet'),
         params = {
-            event = 'billing:client:engageChooseYourBillsViewMenu'
+            event = 'g-billing:client:engageChooseYourBillsViewMenu'
         }
     }
     billsMenu[#billsMenu + 1] = {
@@ -435,7 +534,7 @@ RegisterNetEvent('billing:client:openBillsToPayMenu', function(bills)
     exports['qb-menu']:openMenu(billsMenu)
 end)
 
-RegisterNetEvent('billing:client:openPaidBillsMenu', function(bills)
+RegisterNetEvent('g-billing:client:openPaidBillsMenu', function(bills)
     local ordered_keys = {}
     local totalPaid = 0
     for k, v in pairs(bills) do
@@ -450,20 +549,28 @@ RegisterNetEvent('billing:client:openPaidBillsMenu', function(bills)
             txt = Lang:t('menu.total_paid', { amount = comma_value(totalPaid) })
         }
     }
+    if #bills > 6 then
+        billsMenu[#billsMenu + 1] = {
+            header = Lang:t('menu.return_bullet'),
+            params = {
+                event = 'g-billing:client:engageChooseYourBillsViewMenu'
+            }
+        }
+    end
     for i = #ordered_keys, 1, -1 do
         local v = bills[i]
         billsMenu[#billsMenu + 1] = {
             header = Lang:t('menu.id_amount', { id = v.id, amount = comma_value(v.amount) }),
             txt = Lang:t('menu.paid_bills_info', { date = v.bill_date, senderName = v.sender_name, account = v.sender_account, datePaid = v.status_date }),
             params = {
-                event = 'billing:client:notifyOfPaidBill'
+                event = 'g-billing:client:notifyOfPaidBill'
             }
         }
     end
     billsMenu[#billsMenu + 1] = {
         header = Lang:t('menu.return_bullet'),
         params = {
-            event = 'billing:client:engageChooseYourBillsViewMenu'
+            event = 'g-billing:client:engageChooseYourBillsViewMenu'
         }
     }
     billsMenu[#billsMenu + 1] = {
@@ -473,4 +580,16 @@ RegisterNetEvent('billing:client:openPaidBillsMenu', function(bills)
         }
     }
     exports['qb-menu']:openMenu(billsMenu)
+end)
+
+RegisterNetEvent('g-billing:client:sendText', function(subject, message)
+    TriggerServerEvent('qb-phone:server:sendNewMail', { sender = Lang:t('other.bill_text_sender'), subject = subject, message = message })
+end)
+
+RegisterNetEvent('g-billing:client:getBillsToPay', function()
+    TriggerServerEvent('g-billing:server:getBillsToPay')
+end)
+
+RegisterNetEvent('g-billing:client:getPendingBilled', function()
+    TriggerServerEvent('g-billing:server:getPendingBilled')
 end)
