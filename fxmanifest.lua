@@ -4,7 +4,7 @@ game 'gta5'
 
 author 'Giana - github.com/Giana'
 description 'g-billing'
-version '1.0.0'
+version '2.0.0'
 
 shared_scripts {
     '@qb-core/shared/locale.lua',
