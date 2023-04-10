@@ -22,10 +22,7 @@ server_scripts {
 }
 
 dependencies {
-    'qb-core',
-    'qb-input',
-    'qb-management',
-    'qb-menu'
+    'qb-core'
 }
 
 lua54 'yes'
